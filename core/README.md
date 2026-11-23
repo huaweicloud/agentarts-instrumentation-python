@@ -2,6 +2,8 @@
 
 框架无关的 OTLP 上报内核，供各框架适配包（如 [agentarts-instrumentation-jiuwen](../jiuwen/README.md)）组装使用，也可 standalone 作为普通 `SpanExporter` 挂载到任意 `TracerProvider`。
 
+> **发行状态**：core 目前是 workspace 内部包，**不单独发布**——fat 模式下其模块直接内嵌在 jiuwen 的自包含 wheel 里一起分发。将来其他框架包（langchain/hermes）需要时，再将 core 发布为独立依赖包。
+
 ## 组成
 
 | 模块 | 说明 |

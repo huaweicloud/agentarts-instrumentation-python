@@ -8,9 +8,13 @@ OpenJiuwen 语义包：向华为云 AgentArts（agent-ops）上报 openjiuwen / 
 
 ## 安装
 
+`agentarts-instrumentation-jiuwen` 是**自包含发行包**：wheel 内已内嵌 `agentarts-instrumentation-core` 的全部模块（对其无 pip 依赖），安装这一个包即可，无需再装其他 SDK 包。
+
 ```bash
-pip install "agentarts-instrumentation-jiuwen[grpc]"   # 自动安装 core；gRPC 为 AgentArts 接入网关必需
+pip install "agentarts-instrumentation-jiuwen[grpc]"   # gRPC 为 AgentArts 接入网关必需
 ```
+
+> 预览 wheel 直装：见 [Releases](https://github.com/huaweicloud/agentarts-instrumentation-python/releases)（v0.1.0a2 起为单个自包含 wheel）。
 
 ## 快速开始
 

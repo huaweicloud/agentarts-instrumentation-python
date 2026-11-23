@@ -5,10 +5,15 @@ build-backend = "hatchling.build"
 [project]
 name = "agentarts-instrumentation-jiuwen"
 dynamic = ["version"]
-description = "OpenJiuwen semantic pack for AgentArts instrumentation: registers the agentarts projection derivation (openjiuwen data contract -> gen_ai.* platform semantics) and injects the exporter into openjiuwen runtimes via init_observability."
+description = "OpenJiuwen semantic pack for AgentArts instrumentation: registers the agentarts projection derivation (openjiuwen data contract -> gen_ai.* platform semantics) and injects the exporter into openjiuwen runtimes via init_observability. Self-contained distribution: the agentarts-instrumentation-core modules are bundled into the wheel, so this single package is all a user needs."
 requires-python = ">=3.10"
+# Self-contained (fat) wheel: the core namespace modules are bundled via
+# force-include below, so core's runtime deps are declared here directly
+# and there is NO dependency on the (unpublished) core distribution.
 dependencies = [
-    "agentarts-instrumentation-core>=0.1.0a1,<0.2",
+    "opentelemetry-sdk>=1.25,<2.0",
+    "opentelemetry-exporter-otlp-proto-http>=1.25,<2.0",
+    "pydantic>=2.5,<3",
 ]
 
 [project.optional-dependencies]
@@ -22,11 +27,20 @@ agentarts-instrumentation-inject = "agentarts_instrumentation.jiuwen.inject:inst
 # Symmetric uninstaller: removes the .pth (run BEFORE pip uninstall).
 agentarts-instrumentation-uninject = "agentarts_instrumentation.jiuwen.inject:remove_pth"
 
-[tool.uv.sources]
-agentarts-instrumentation-core = { workspace = true }
-
 [tool.hatch.version]
 path = "src/agentarts_instrumentation/jiuwen/_version.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/agentarts_instrumentation"]
+
+# Bundle the core namespace modules into this (fat) wheel: users install
+# a single package. No file overlap — this package only adds the jiuwen/
+# subpackage, the top-level namespace files come from core.
+#
+# NOTE: wheel-only distribution. The "../core/src" relative include
+# resolves when the wheel is built from the workspace source tree
+# (uv build jiuwen --wheel) but NOT when a wheel is rebuilt from an
+# sdist (the sibling core/ tree does not exist in the unpacked sdist),
+# so sdists must not be produced for this package in fat-wheel mode.
+[tool.hatch.build.targets.wheel.force-include]
+"../core/src/agentarts_instrumentation" = "/agentarts_instrumentation"

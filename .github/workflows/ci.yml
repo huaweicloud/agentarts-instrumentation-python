@@ -41,4 +41,4 @@ jobs:
       - name: Build wheels
         run: |
           uv build core
-          uv build jiuwen
+          uv build jiuwen --wheel

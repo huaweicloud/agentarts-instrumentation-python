@@ -10,8 +10,8 @@
 
 | 目录 | PyPI 包 | 说明 |
 |---|---|---|
-| [core/](core/README.md) | `agentarts-instrumentation-core` | 框架无关的 OTLP 上报内核：缓冲导出、投影管线与派生注册表、运行时注入工具 |
-| [jiuwen/](jiuwen/README.md) | `agentarts-instrumentation-jiuwen` | OpenJiuwen 语义包：注册 agentarts 投影派生，向 openjiuwen 宿主一键注入 exporter |
+| [core/](core/README.md) | `agentarts-instrumentation-core` | 框架无关的 OTLP 上报内核：缓冲导出、投影管线与派生注册表、运行时注入工具。workspace 内部包，暂不单独发布（fat 模式下内嵌于 jiuwen 一起分发） |
+| [jiuwen/](jiuwen/README.md) | `agentarts-instrumentation-jiuwen` | OpenJiuwen 语义包：**自包含发行**（wheel 内嵌 core 全部模块），用户只需安装这一个包 |
 
 > LangChain/LangGraph、Hermes 等框架适配包规划中，按 jiuwen 的同一模式接入。
 
