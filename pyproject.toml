@@ -1,0 +1,21 @@
+[tool.uv.workspace]
+members = ["core", "jiuwen"]
+
+[tool.pytest.ini_options]
+testpaths = ["core/tests", "jiuwen/tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+# Battle-tested tests carried over verbatim: long assert/comment strings,
+# broad pydantic ValidationError raises, and conftest imports that follow
+# module-level sys.path/skip bootstrap.
+"**/tests/**" = ["E501", "B017"]
+"**/tests/**/conftest.py" = ["E402"]
+# Example scripts import after runtime setup lines.
+"examples/*" = ["E402"]

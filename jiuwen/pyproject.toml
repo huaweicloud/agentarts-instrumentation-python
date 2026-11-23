@@ -1,0 +1,32 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "agentarts-instrumentation-jiuwen"
+dynamic = ["version"]
+description = "OpenJiuwen semantic pack for AgentArts instrumentation: registers the agentarts projection derivation (openjiuwen data contract -> gen_ai.* platform semantics) and injects the exporter into openjiuwen runtimes via init_observability."
+requires-python = ">=3.10"
+dependencies = [
+    "agentarts-instrumentation-core>=0.1,<0.2",
+]
+
+[project.optional-dependencies]
+grpc = ["opentelemetry-exporter-otlp-proto-grpc>=1.25,<2.0"]
+test = ["pytest>=7"]
+
+[project.scripts]
+# Post-install injector (runs after pip install): writes a .pth into the
+# current venv (see agentarts_instrumentation/jiuwen/inject.py).
+agentarts-inject = "agentarts_instrumentation.jiuwen.inject:install_pth"
+# Symmetric uninstaller: removes the .pth (run BEFORE pip uninstall).
+agentarts-uninject = "agentarts_instrumentation.jiuwen.inject:remove_pth"
+
+[tool.uv.sources]
+agentarts-instrumentation-core = { workspace = true }
+
+[tool.hatch.version]
+path = "src/agentarts_instrumentation/jiuwen/_version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/agentarts_instrumentation"]
