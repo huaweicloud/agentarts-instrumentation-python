@@ -6,7 +6,7 @@ Huawei Cloud AgentArts (agent-ops).
 Registers the ``agentarts`` projection derivation (openjiuwen attribute
 contract → AgentArts gen_ai.* platform semantics) and ships the runtime
 injection for openjiuwen hosts (init_observability wrapper; see
-inject.py — imported by the ``agentarts-inject`` .pth, never at package
+inject.py — imported by the ``agentarts-instrumentation-inject`` .pth, never at package
 import). Zero import dependency on openjiuwen: the derivation reads the
 host's attribute contract only. See docs/design.md.
 """

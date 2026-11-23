@@ -36,10 +36,10 @@ exporter = build_exporter(
 init_observability(config, span_exporter_override=exporter)
 ```
 
-方式二（一键注入）：安装后执行 `agentarts-inject`，向当前 venv 的 site-packages 写入 `.pth`，此后每个解释器进程自动完成注入；执行 `agentarts-uninject` 撤销。
+方式二（一键注入）：安装后执行 `agentarts-instrumentation-inject`，向当前 venv 的 site-packages 写入 `.pth`，此后每个解释器进程自动完成注入；执行 `agentarts-instrumentation-uninject` 撤销。
 
 ```bash
-agentarts-inject
+agentarts-instrumentation-inject
 ```
 
 ## 访问凭证

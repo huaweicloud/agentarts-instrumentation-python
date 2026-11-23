@@ -1,7 +1,7 @@
 # Copyright (c) Huawei Technologies Co., Ltd. 2026. All rights reserved.
 
 """AgentArts runtime injection into openjiuwen hosts (in-package;
-installed via the ``agentarts-inject`` command).
+installed via the ``agentarts-instrumentation-inject`` command).
 
 Logic mirrors ``examples/inject_service_host.py`` (the copy-based
 template for environments without pip); only the deployment shape
@@ -13,7 +13,7 @@ new version, no file copying needed).
 Deploy (inject right after pip install)::
 
     pip install "agentarts-instrumentation-jiuwen[grpc]"  # 1. install (gRPC required)
-    agentarts-inject                                      # 2. write .pth (idempotent)
+    agentarts-instrumentation-inject            # 2. write .pth (idempotent)
 
 From then on, **every** interpreter process of this venv executes
 main() at startup: with credentials present, a deferred injection hook
@@ -36,7 +36,7 @@ itself finishes importing
 host's import order is identical to before the probe was installed —
 zero side effects.
 
-Uninstall: run ``agentarts-uninject`` (removes the .pth) — or delete
+Uninstall: run ``agentarts-instrumentation-uninject`` (removes the .pth) — or delete
 ``agentarts_instrumentation_jiuwen_inject.pth`` under site-packages
 manually — BEFORE ``pip uninstall`` of the package. The .pth content is
 failure-guarded: once the package is gone it stays silent instead of
@@ -83,7 +83,7 @@ _PTH_NAME = "agentarts_instrumentation_jiuwen_inject.pth"
 #: lives in the core toolkit).
 _INJECT_MODULE = "agentarts_instrumentation.jiuwen.inject"
 _PTH_LINE = build_pth_line(_INJECT_MODULE)
-_TAG = "[agentarts-inject]"
+_TAG = "[agentarts-instrumentation-inject]"
 
 _EXT_SETUP_MODULE = "openjiuwen.extensions.observability.setup"
 _TEAMS_SETUP_MODULE = "openjiuwen.agent_teams.observability.setup"
@@ -341,7 +341,7 @@ def main() -> bool:  # noqa: C901 - kept structurally identical to the examples 
 
 
 def install_pth() -> int:
-    """Entry point of the ``agentarts-inject`` command: write the .pth
+    """Entry point of the ``agentarts-instrumentation-inject`` command: write the .pth
     into this interpreter's site-packages (generic mechanics in the
     core toolkit).
 
@@ -361,14 +361,14 @@ def install_pth() -> int:
             f"{_TAG} Set the official access variables ({ENV_TOKEN} / "
             f"{ENV_RESOURCE_ID}, or point {ENV_FILE} at an env file carrying "
             f"them) and restart the host service to activate. Uninstall: "
-            f"run agentarts-uninject. Processes without openjiuwen simply "
+            f"run agentarts-instrumentation-uninject. Processes without openjiuwen simply "
             f"skip (harmless)."
         )
     return code
 
 
 def remove_pth() -> int:
-    """Entry point of the ``agentarts-uninject`` command: delete the
+    """Entry point of the ``agentarts-instrumentation-uninject`` command: delete the
     .pth from this interpreter's site-packages.
 
     Idempotent: a missing file is a success. Run this BEFORE

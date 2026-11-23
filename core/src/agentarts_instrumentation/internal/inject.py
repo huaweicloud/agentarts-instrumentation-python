@@ -26,7 +26,7 @@ from __future__ import annotations
 import importlib.abc
 import sys
 
-_TAG = "[agentarts-inject]"
+_TAG = "[agentarts-instrumentation-inject]"
 
 
 def build_pth_line(module: str) -> str:
@@ -41,7 +41,8 @@ def build_pth_line(module: str) -> str:
         "import sys; exec(\"try:\\n import "
         + module
         + "\\nexcept ModuleNotFoundError:\\n pass\\n"
-        + "except Exception as e:\\n print('[agentarts-inject] injection load failed:', e, "
+        + "except Exception as e:\\n print("
+        + "'[agentarts-instrumentation-inject] injection load failed:', e, "
         'file=sys.stderr)")\n'
     )
 

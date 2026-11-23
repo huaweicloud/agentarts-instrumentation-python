@@ -18,9 +18,9 @@ test = ["pytest>=7"]
 [project.scripts]
 # Post-install injector (runs after pip install): writes a .pth into the
 # current venv (see agentarts_instrumentation/jiuwen/inject.py).
-agentarts-inject = "agentarts_instrumentation.jiuwen.inject:install_pth"
+agentarts-instrumentation-inject = "agentarts_instrumentation.jiuwen.inject:install_pth"
 # Symmetric uninstaller: removes the .pth (run BEFORE pip uninstall).
-agentarts-uninject = "agentarts_instrumentation.jiuwen.inject:remove_pth"
+agentarts-instrumentation-uninject = "agentarts_instrumentation.jiuwen.inject:remove_pth"
 
 [tool.uv.sources]
 agentarts-instrumentation-core = { workspace = true }
