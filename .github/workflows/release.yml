@@ -1,0 +1,26 @@
+name: Preview Release
+# Any v* tag produces a prerelease with built wheels attached
+# (preview builds for early adopters; final publishing goes to PyPI).
+on:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: write
+jobs:
+  preview-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Build wheels
+        run: |
+          uv build core
+          uv build jiuwen
+      - name: Create prerelease
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" --prerelease \
+            --title "Preview $GITHUB_REF_NAME" \
+            --notes "Preview build of agentarts-instrumentation-core and agentarts-instrumentation-jiuwen from tag $GITHUB_REF_NAME." \
+            dist/*.whl dist/*.tar.gz

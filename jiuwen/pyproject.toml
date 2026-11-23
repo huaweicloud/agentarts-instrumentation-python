@@ -8,7 +8,7 @@ dynamic = ["version"]
 description = "OpenJiuwen semantic pack for AgentArts instrumentation: registers the agentarts projection derivation (openjiuwen data contract -> gen_ai.* platform semantics) and injects the exporter into openjiuwen runtimes via init_observability."
 requires-python = ">=3.10"
 dependencies = [
-    "agentarts-instrumentation-core>=0.1,<0.2",
+    "agentarts-instrumentation-core>=0.1.0a1,<0.2",
 ]
 
 [project.optional-dependencies]
