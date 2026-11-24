@@ -303,11 +303,14 @@ class BufferedOtlpExporter(SpanExporter):
                 attempts,
             )
             if not self._closed:
-                # Exponential backoff: 1s, 2s, 4s, 8s, 10s... (capped at
-                # 10s). Measured slow-link gateway outages lasted ~90s
-                # (2026-11-19: one trace lost 30 spans in two 3-failure
-                # streaks); 6 attempts × 15s RPC + backoff ≈ 2 minutes.
-                time.sleep(min(2 ** (attempts - 1), 10))
+                # Exponential backoff: 1s, 2s, 4s, 8s, 16s, 30s... (capped
+                # at 30s). Measured slow-gateway windows: ~90s outage
+                # (2026-11-19, one trace lost 30 spans in two 3-failure
+                # streaks) and multi-minute subagent-burst DEADLINE_EXCEEDED
+                # streaks (2026-11-24, where 6 attempts x 15s RPC + 10s-cap
+                # backoff ~2min still dropped 2 x 64-span batches); 10
+                # attempts x 30s RPC + ~151s backoff ~ 7.5 minutes.
+                time.sleep(min(2 ** (attempts - 1), 30))
 
 
 __all__ = ["BufferedOtlpExporter"]

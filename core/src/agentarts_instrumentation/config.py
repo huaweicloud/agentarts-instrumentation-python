@@ -68,19 +68,26 @@ class ExporterConfig(BaseModel):
             measured ~300KB each; 4096 entries could accumulate GBs).
             Byte limit evicts oldest the same way — first limit hit
             wins.
-        batch_size: Max spans per background send.
+        batch_size: Max spans per background send. Kept small so one
+            request stays a bounded payload: measured (2026-11-24) that
+            64-span batches carrying large LLM input/output payloads
+            hit DEADLINE_EXCEEDED on a slow gateway far more often than
+            32-span ones.
         flush_interval_ms: Background flush interval.
         otlp_timeout_ms: Per-RPC timeout of the inner official exporter
             (total deadline including its internal retries). Measured
             on slow cross-network links, a small timeout causes
             DEADLINE_EXCEEDED whole-batch failures — must comfortably
-            exceed single-batch RTT + transfer time.
+            exceed single-batch RTT + transfer time. 30s absorbs the
+            subagent-burst slow-gateway windows observed (2026-11-24,
+            where 15s lost whole 64-span batches).
         export_attempts: Total attempts per failed batch (including
-            the first); retries with exponential backoff (1/2/4/8/10s
+            the first); retries with exponential backoff (1/2/4/8/16/30s
             capped) and only counts as dropped when exhausted. Default
-            6 × 15s RPC + backoff ≈ 2 minutes of outage survival
-            (measured gateway outages up to ~90s; 3 attempts lose
-            batches).
+            10 × 30s RPC + ~151s backoff ≈ 7.5 minutes of outage
+            survival (measured gateway outages up to ~90s and
+            slow-gateway burst streaks of several minutes, 2026-11-24;
+            6 × 15s + 10s-cap ≈ 2min still dropped 2 × 64 spans then).
         export_timeout_ms: Drain timeout for shutdown/force_flush,
             aligned with the openjiuwen main stack semantics.
     """
@@ -91,10 +98,10 @@ class ExporterConfig(BaseModel):
     projection: Projection | None = None
     queue_size: int = Field(default=4096, ge=1)
     queue_max_bytes: int = Field(default=134217728, ge=1024)
-    batch_size: int = Field(default=64, ge=1)
+    batch_size: int = Field(default=32, ge=1)
     flush_interval_ms: int = Field(default=500, ge=1)
-    otlp_timeout_ms: int = Field(default=15000, ge=100)
-    export_attempts: int = Field(default=6, ge=1)
+    otlp_timeout_ms: int = Field(default=30000, ge=100)
+    export_attempts: int = Field(default=10, ge=1)
     export_timeout_ms: int = Field(default=5000, ge=100)
 
     @field_validator("headers")
