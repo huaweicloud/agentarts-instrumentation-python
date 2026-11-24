@@ -27,6 +27,7 @@ from typing import Any
 import pytest
 from agentarts_instrumentation.config import ExporterConfig, Projection
 from agentarts_instrumentation.exporter.buffer import BufferedOtlpExporter
+from agentarts_instrumentation.openjiuwen import inject as inject_module
 from agentarts_instrumentation.openjiuwen.inject import (
     ENV_APM_ENABLE,
     ENV_RESOURCE_ID,
@@ -345,6 +346,101 @@ def test_f3_load_settings_env_over_file(tmp_path, monkeypatch):
     assert _load_settings()[ENV_TOKEN] == "from-env"
 
 
+def test_f3_env_file_parser_strips_matched_quotes(tmp_path):
+    """python-dotenv-style quoted values (single or double) parse the
+    same as bare values, so the host's own env file can be reused
+    directly."""
+    env_file = tmp_path / "agentarts.env"
+    env_file.write_text(
+        'agentarts_agentops_apm_token="tok-quoted"\n'
+        "agent_resource_id='rid-quoted'\n"
+        "agentarts_agentops_apm_exporter_endpoint=https://apm-access.cn-southwest-2.myhuaweicloud.com\n",
+        encoding="utf-8",
+    )
+    settings = _read_env_file(str(env_file))
+    assert settings["agentarts_agentops_apm_token"] == "tok-quoted"
+    assert settings["agent_resource_id"] == "rid-quoted"
+    assert (
+        settings["agentarts_agentops_apm_exporter_endpoint"]
+        == "https://apm-access.cn-southwest-2.myhuaweicloud.com"
+    )
+
+
+def test_f3_load_settings_default_env_file(tmp_path, monkeypatch):
+    """Fallback order: process env > AGENTARTS_ENV_FILE file > framework
+    default env file; a user-specified file replaces the default (no
+    merge), and both parse quoted values identically."""
+    default_file = tmp_path / "host.env"
+    default_file.write_text(
+        'agentarts_agentops_apm_token="from-default"\n'
+        "agent_resource_id=rid-default\n",
+        encoding="utf-8",
+    )
+    user_file = tmp_path / "user.env"
+    user_file.write_text("agentarts_agentops_apm_token=from-user\n", encoding="utf-8")
+
+    for name in (ENV_TOKEN, "AGENTARTS_TRACE_TOKEN", ENV_RESOURCE_ID, "AGENTARTS_AGENT_ID"):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv("AGENTARTS_ENV_FILE", "")
+
+    # AGENTARTS_ENV_FILE unset: the framework default env file is reused
+    settings = _load_settings(default_env_file=str(default_file))
+    assert settings[ENV_TOKEN] == "from-default"
+    assert settings[ENV_RESOURCE_ID] == "rid-default"
+
+    # AGENTARTS_ENV_FILE set: the user's independent file replaces the default
+    monkeypatch.setenv("AGENTARTS_ENV_FILE", str(user_file))
+    settings = _load_settings(default_env_file=str(default_file))
+    assert settings[ENV_TOKEN] == "from-user"
+    assert ENV_RESOURCE_ID not in settings
+
+    # the process environment still wins over any file
+    monkeypatch.setenv(ENV_TOKEN, "from-env")
+    settings = _load_settings(default_env_file=str(default_file))
+    assert settings[ENV_TOKEN] == "from-env"
+
+
+def test_f3_default_env_file_is_host_workspace_env(tmp_path, monkeypatch):
+    """The default env file is the host's own official workspace env."""
+    from pathlib import Path
+
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls, _home=tmp_path: _home))
+    assert inject_module._default_env_file() == str(
+        tmp_path / ".jiuwenswarm" / "config" / ".env"
+    )
+
+
+def test_f3_main_arms_from_default_host_env_file(tmp_path, monkeypatch):
+    """Credentials written into the host's own env file arm the injection
+    with AGENTARTS_ENV_FILE unset (default reuse, quotes stripped)."""
+    import sys as _sys
+
+    host_env = tmp_path / "host.env"
+    host_env.write_text(
+        'agentarts_agentops_apm_token="tok-host"\n'
+        "agent_resource_id=rid-host\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("AGENTARTS_ENV_FILE", "")
+    for name in (
+        ENV_TOKEN,
+        "AGENTARTS_TRACE_TOKEN",
+        ENV_RESOURCE_ID,
+        "AGENTARTS_AGENT_ID",
+        ENV_APM_ENABLE,
+    ):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setattr(inject_module, "_default_env_file", lambda: str(host_env))
+
+    finders_before = set(map(id, _sys.meta_path))
+    try:
+        assert main() is True
+    finally:
+        for finder in list(_sys.meta_path):
+            if id(finder) not in finders_before:
+                _sys.meta_path.remove(finder)
+
+
 def test_f3_main_skips_when_apm_disabled(monkeypatch):
     """apm_enable explicitly false: skip even with full credentials, and
     register no injection hook."""
@@ -364,6 +460,9 @@ def test_f3_main_skips_without_credentials(monkeypatch):
     import sys as _sys
 
     monkeypatch.setenv("AGENTARTS_ENV_FILE", "")
+    # Neutralize the host-workspace default env file too: a dev machine
+    # may carry real credentials in ~/.jiuwenswarm/config/.env.
+    monkeypatch.setattr(inject_module, "_default_env_file", lambda: "")
     for name in (
         ENV_TOKEN,
         "AGENTARTS_TRACE_TOKEN",

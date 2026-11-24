@@ -11,5 +11,6 @@ venv/
 .coverage
 htmlcov/
 .env
+logs/
 .idea/
 .vscode/

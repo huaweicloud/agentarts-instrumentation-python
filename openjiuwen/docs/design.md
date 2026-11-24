@@ -625,8 +625,11 @@ OTel 1.41.x; live runs + real AgentArts echo-back verification):
    same-named file never loads; a `.pth` executes during site processing, earlier than business
    imports, covering all processes;
 2. **token timing**: injection happens before the host's `load_dotenv`; the module must read the
-   official access variables from the environment or the host's .env itself
-   (`agentarts_agentops_apm_token` / `agent_resource_id`, aligned with the console access guide
+   official access variables itself — from the environment, from the env file pointed to by
+   `AGENTARTS_ENV_FILE`, or (default, since 2026-11-24) from the host's own
+   `~/.jiuwenswarm/config/.env` (quote handling unified with python-dotenv: matched surrounding
+   quotes are stripped, so the same file can mix the host's quoted LLM keys and bare access
+   variables) — aligned with the console access guide
    2026-11-20; 0.1.x legacy `AGENTARTS_*` names fall back — see the key configuration table in
    README);
 3. **host configuration**: jiuwenswarm additionally needs `observability.agent.enabled: true`

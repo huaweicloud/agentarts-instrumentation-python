@@ -50,7 +50,7 @@ agentarts-instrumentation-inject
 
 ## 访问凭证
 
-通过环境变量提供（或用 `AGENTARTS_ENV_FILE` 指向 .env 文件，进程环境优先）：
+通过环境变量提供（探针形态还支持 env 文件：默认读宿主自己的 `~/.jiuwenswarm/config/.env`，或用 `AGENTARTS_ENV_FILE` 指向独立文件；引号写法与 python-dotenv 统一；进程环境优先）：
 
 | 变量 | 说明 |
 |---|---|

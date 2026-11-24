@@ -91,6 +91,8 @@ init_observability(
 )
 ```
 
+> 前置：exporter 只负责导出，span 得由宿主自己产生——宿主观测开关没打开就没有数据可导。接 jiuwenswarm 时注意其 `config.yaml`：`team_observability` 默认已启用，但单 agent 路径的 `agent_observability.enabled` 默认 `false`，需显式改为 `true`。
+
 从此 openjiuwen 产生的所有 span（agent / llm / tool / iteration）在导出时流经：**投影管线**（openjiuwen 数据契约 → `gen_ai.*` 平台语义）→ **缓冲队列**（计数+字节双限、后台线程批量、退避重试）→ OTLP gRPC → AgentArts。
 
 ## 5. 用法三：挂到任意 TracerProvider（通用 SDK）

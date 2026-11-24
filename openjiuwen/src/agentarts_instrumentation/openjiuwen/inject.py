@@ -17,9 +17,11 @@ From then on, **every** interpreter process of this venv executes
 main() at startup: with credentials present, a deferred injection hook
 is registered (armed); otherwise it skips — no process startup is ever
 blocked. Credentials match the examples version (official access
-variables ``agentarts_agentops_apm_token`` / ``agent_resource_id`` etc.,
-or an env file referenced by ``AGENTARTS_ENV_FILE``; aligned with the
-console access guide 2026-11-20; 0.1.x legacy names fall back).
+variables ``agentarts_agentops_apm_token`` / ``agent_resource_id`` etc.
+in the process environment, an env file referenced by
+``AGENTARTS_ENV_FILE``, or — by default — the host's own
+``~/.jiuwenswarm/config/.env``; aligned with the console access guide
+2026-11-20; 0.1.x legacy names fall back).
 
 Deferred injection (fix from 2026-11): the ``.pth`` runs during site
 initialization, where importing openjiuwen immediately is **forbidden**
@@ -45,6 +47,7 @@ processes keep their in-memory exporter until they restart.
 from __future__ import annotations
 
 import sys
+from pathlib import Path
 
 from agentarts_instrumentation.internal.credentials import (
     DEFAULT_ENDPOINT,
@@ -89,6 +92,17 @@ _TARGET_MODULES = (_EXT_SETUP_MODULE, _TEAMS_SETUP_MODULE)
 
 #: Default AgentArts access gateway (cn-southwest-2; gRPC channel).
 _DEFAULT_ENDPOINT = DEFAULT_ENDPOINT
+
+
+def _default_env_file() -> str:
+    """Default env file when ``AGENTARTS_ENV_FILE`` is unset: the host's
+    own official workspace env (jiuwenswarm ``~/.jiuwenswarm/config/.env``)
+    — the official access variables can simply be appended to the file
+    the host already loads. Parsed identically to a user-specified file
+    (matched surrounding quotes are stripped), and replaced entirely by
+    ``AGENTARTS_ENV_FILE`` when that is set.
+    """
+    return str(Path.home() / ".jiuwenswarm" / "config" / ".env")
 
 
 def _host_otlp_conflict(config: object) -> str | None:
@@ -139,7 +153,7 @@ def _host_otlp_conflict(config: object) -> str | None:
 
 def main() -> bool:  # noqa: C901 - kept structurally identical to the examples version on purpose
     """Register the deferred injection hook; returns whether armed."""
-    settings = _load_settings()
+    settings = _load_settings(default_env_file=_default_env_file())
 
     def pick(official: str, legacy: str = "") -> str:
         return settings.get(official, "") or settings.get(legacy, "")
@@ -357,8 +371,10 @@ def install_pth() -> int:
     if code == 0:
         print(
             f"{_TAG} Set the official access variables ({ENV_TOKEN} / "
-            f"{ENV_RESOURCE_ID}, or point {ENV_FILE} at an env file carrying "
-            f"them) and restart the host service to activate. Uninstall: "
+            f"{ENV_RESOURCE_ID}) in the process environment, in the host's own "
+            f"env file (default: {Path.home() / '.jiuwenswarm' / 'config' / '.env'}), "
+            f"or point {ENV_FILE} at an env file carrying them; then restart the host "
+            f"service to activate. Uninstall: "
             f"run agentarts-instrumentation-uninject. Processes without openjiuwen simply "
             f"skip (harmless)."
         )

@@ -40,7 +40,7 @@ agentarts-instrumentation-inject
 
 ## 3. 凭证配置
 
-三种方式任选（探测顺序一致）：
+三种来源（同一键优先级：进程环境变量 > env 文件）：
 
 **方式 A：进程环境变量**（容器/k8s 里最常见）
 
@@ -51,13 +51,20 @@ agent_resource_id=<agent_id>
 # 可选：resource_type / agent_domain_id / agentarts_project_id / AGENTARTS_USER_ID
 ```
 
-**方式 B：`AGENTARTS_ENV_FILE` 指向一个 env 文件**（免污染环境）
+**方式 B（默认）：写进宿主自己的 env 文件**——探针默认读取 jiuwenswarm 工作区 `~/.jiuwenswarm/config/.env`，把官方接入变量追加进去即可，无需任何额外设置：
+
+```ini
+# 可与宿主自己的键（如 API_BASE）混写；带不带引号均可——解析与 python-dotenv 统一（成对引号自动剥除）
+agentarts_agentops_apm_token=<token>
+agentarts_agentops_apm_exporter_endpoint=https://apm-access.cn-southwest-2.myhuaweicloud.com
+agent_resource_id=<agent_id>
+```
+
+**方式 C：`AGENTARTS_ENV_FILE` 指向独立 env 文件**（不想写进宿主 env；设置后方式 B 的默认文件不再读取，解析方式相同）
 
 ```bash
 AGENTARTS_ENV_FILE=/path/to/agentarts.env   # 文件里写上面这些 KEY=VALUE
 ```
-
-**方式 C：默认位置的 `~/.agentarts.env`**（本机开发推荐）
 
 注意：注入模块在宿主自己的 `load_dotenv` **之前**运行，凭证必须在环境或上述文件里，不能指望宿主配置加载后再注入。
 
@@ -99,7 +106,7 @@ pip uninstall agentarts-instrumentation-openjiuwen
 
 按序检查：
 
-1. 凭证三要素在宿主进程环境里是否可见（容器里最常见：只配在了 shell 而没进服务环境）
+1. 凭证三要素对宿主进程是否可见（进程环境变量，或默认/指定的 env 文件——容器里最常见：只配在了 shell 而没进服务环境）
 2. 重启后日志里有没有 `armed` / `applied` 行（没有 armed → 凭证问题；有 armed 无 applied → 宿主没 import 观测模块/没调 `init_observability`）
 3. 宿主是否真的产生了 span（看宿主自己的观测日志；空跑不发数据是正常的）
 4. 平台 Agent 资源 ID 是否与 `agent_resource_id` 一致（配错 Agent 看不到数据）
