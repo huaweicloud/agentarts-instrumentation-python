@@ -144,10 +144,10 @@ class ExporterConfig(BaseModel):
     projection: Projection | None = None   # None disables projection (behavior identical to the official exporter)
     queue_size: int = Field(default=4096, ge=1)          # bounded queue capacity (count); evicts oldest when full
     queue_max_bytes: int = Field(default=134217728, ge=1024)  # bounded queue capacity (estimated bytes); same eviction
-    batch_size: int = Field(default=64, ge=1)
+    batch_size: int = Field(default=32, ge=1)
     flush_interval_ms: int = Field(default=500, ge=1)
-    otlp_timeout_ms: int = Field(default=15000, ge=100)  # per-RPC timeout of the inner official exporter (incl. internal retries)
-    export_attempts: int = Field(default=6, ge=1)        # total attempts per failed batch (exponential backoff; drop only when exhausted)
+    otlp_timeout_ms: int = Field(default=30000, ge=100)  # per-RPC timeout of the inner official exporter (incl. internal retries)
+    export_attempts: int = Field(default=10, ge=1)       # total attempts per failed batch (exponential backoff 1/2/4/8/16/30s; drop only when exhausted)
     export_timeout_ms: int = Field(default=5000, ge=100) # shutdown/force_flush drain timeout, aligned with the main stack
 ```
 

@@ -120,8 +120,11 @@ tracer = provider.get_tracer("my-app")
 | `protocol` | `http/protobuf` | AgentArts 用 `grpc` |
 | `headers` | `{}` | 认证头，键须小写 |
 | `projection` | None | 投影配置，见下 |
-| `queue_max_spans` / `queue_max_bytes` | 内置值 | 缓冲队列双上限，满则丢弃计数并告警 |
-| `flush_interval_s` / `batch_max` | 内置值 | 后台线程批量节奏 |
+| `queue_size` / `queue_max_bytes` | `4096` / `128MB` | 缓冲队列双上限，满则丢弃计数并告警 |
+| `batch_size` | `32` | 单批 span 数上限（小批次在慢网关下不易整批超时） |
+| `flush_interval_ms` | `500` | 后台线程批量节奏 |
+| `otlp_timeout_ms` | `30000` | 单次 RPC 超时（小值在慢网关下会整批 DEADLINE_EXCEEDED） |
+| `export_attempts` | `10` | 失败批次重试次数，指数退避 1/2/4/8/16/30s 封顶，耗尽才丢弃 |
 
 `Projection` 常用项：`preset="agentarts"`（平台语义派生）、`service_name`（平台服务命名）、`attributes`（公共属性注入）、`drop`（正则删属性）、`rename`、`truncate`（超长截断）。
 
