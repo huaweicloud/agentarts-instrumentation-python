@@ -34,9 +34,9 @@ pip install \
 
 > 实测（2026-11）：apm-access 网关只发布 gRPC 通道，HTTP 返回 404，所以 gRPC exporter 必装。
 
-## 3. 用法一：连通性测试（推荐先跑）
+## 3. 用法一：组装 exporter 并做连通性测试（推荐先跑）
 
-仓库自带的 [examples/report_to_agentarts.py](../../examples/report_to_agentarts.py) 手工构造一条静态 trace（AGENT + LLM 两级 span）直发平台：
+用法一/二/三共用同一段 exporter 组装代码，本节先给出并用脚本实测。仓库自带的 [examples/report_to_agentarts.py](../../examples/report_to_agentarts.py) 手工构造一条静态 trace（AGENT + LLM 两级 span）直发平台：
 
 ```bash
 set agentarts_agentops_apm_token=...
@@ -46,11 +46,18 @@ set agent_resource_id=...
 python openjiuwen/examples/report_to_agentarts.py
 ```
 
-脚本要点（也是 SDK 的标准组装方式）：
+脚本核心是下面的 exporter 组装——SDK 标准组装方式，用法二、用法三复用同一 `exporter` 对象：
 
 ```python
+import os
+
 from agentarts_instrumentation import ExporterConfig, Projection, build_exporter
 import agentarts_instrumentation.openjiuwen  # 导入即注册 agentarts 派生，必须
+
+# 取值自第 1 节的环境变量
+trace_endpoint = os.environ["agentarts_agentops_apm_exporter_endpoint"]
+trace_token = os.environ["agentarts_agentops_apm_token"]
+agent_id = os.environ["agent_resource_id"]
 
 exporter = build_exporter(
     ExporterConfig(
@@ -69,11 +76,11 @@ exporter = build_exporter(
 )
 ```
 
-跑完到控制台该 Agent 的**追踪分析**视图确认 echo 出现。这一步验证了 endpoint/token/agent_id 三要素匹配，与后续宿主集成的问题域解耦。
+跑完到控制台该 Agent 的**追踪分析**视图确认 echo 出现。这一步验证了 endpoint/token/agent_id 三要素匹配，与后续宿主集成的问题域解耦；用法二、用法三在此基础上直接挂载同一 `exporter`。
 
 ## 4. 用法二：挂到 openjiuwen 宿主（核心场景）
 
-openjiuwen 的 `init_observability` 提供 `span_exporter_override` 官方钩子，把上面组装的 exporter 传进去即可：
+承接用法一组装好的 `exporter`（组装代码见上节，不再重复）：openjiuwen 的 `init_observability` 提供 `span_exporter_override` 官方钩子，传入即可：
 
 ```python
 from openjiuwen.extensions.observability import init_observability
@@ -88,7 +95,7 @@ init_observability(
 
 ## 5. 用法三：挂到任意 TracerProvider（通用 SDK）
 
-不依赖 openjiuwen 也可以——它就是一个标准 `SpanExporter`：
+`exporter` 仍取用法一组装的那份（含 `import agentarts_instrumentation.openjiuwen` 派生注册），只是不接 openjiuwen 宿主——它本身就是一个标准 `SpanExporter`，可挂到任意 `TracerProvider`：
 
 ```python
 from opentelemetry.sdk.trace import TracerProvider
