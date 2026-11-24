@@ -20,7 +20,7 @@ SDK 显式集成形态见 [guide-sdk.md](guide-sdk.md)。
 ```bash
 # 1. 安装 SDK 包（自包含 wheel，无需 core）
 pip install \
-  https://github.com/huaweicloud/agentarts-instrumentation-python/releases/download/v0.1.0a3/agentarts_instrumentation_openjiuwen-0.1.0a3-py3-none-any.whl \
+  https://github.com/huaweicloud/agentarts-instrumentation-python/releases/download/v0.1.0a4/agentarts_instrumentation_openjiuwen-0.1.0a4-py3-none-any.whl \
   opentelemetry-exporter-otlp-proto-grpc
 
 # 2. 写入 .pth（幂等，可重复执行）

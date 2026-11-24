@@ -28,7 +28,7 @@
 ```bash
 # 预览版（v0.1.0a2 起为单包自包含 wheel，无需再装 core）
 pip install \
-  https://github.com/huaweicloud/agentarts-instrumentation-python/releases/download/v0.1.0a3/agentarts_instrumentation_openjiuwen-0.1.0a3-py3-none-any.whl \
+  https://github.com/huaweicloud/agentarts-instrumentation-python/releases/download/v0.1.0a4/agentarts_instrumentation_openjiuwen-0.1.0a4-py3-none-any.whl \
   opentelemetry-exporter-otlp-proto-grpc   # gRPC 通道，AgentArts 网关必需
 ```
 
