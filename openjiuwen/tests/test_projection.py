@@ -8,7 +8,7 @@ import json
 
 import pytest
 from agentarts_instrumentation.config import Projection
-from agentarts_instrumentation.jiuwen.preset import (
+from agentarts_instrumentation.openjiuwen.preset import (
     _error_aggregator,
     _input_aggregator,
     _parent_refs,

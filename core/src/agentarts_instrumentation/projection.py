@@ -6,7 +6,7 @@
 The generic pipeline: attributes injection → registered derivation →
 drop → rename → truncate → clone (the original span is never modified;
 see exporter/transform.py). Framework packs (e.g.
-agentarts-instrumentation-jiuwen) register named derivations via
+agentarts-instrumentation-openjiuwen) register named derivations via
 ``register_derivation`` that map their host data contract onto AgentArts
 semantics; an empty config is an identity pass-through.
 """
@@ -77,8 +77,8 @@ def get_derivation(name: str) -> Derivation | None:
         raise ValueError(
             f"unknown projection preset {name!r}: no derivation registered under this "
             f"name (available: {available}). The 'agentarts' preset is provided by "
-            f"agentarts-instrumentation-jiuwen — install it and import "
-            f"agentarts_instrumentation.jiuwen."
+            f"agentarts-instrumentation-openjiuwen — install it and import "
+            f"agentarts_instrumentation.openjiuwen."
         ) from None
 
 

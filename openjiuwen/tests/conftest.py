@@ -20,9 +20,9 @@ import sys
 from pathlib import Path
 from typing import Any
 
-# Importing the jiuwen pack registers the "agentarts" derivation for
+# Importing the openjiuwen pack registers the "agentarts" derivation for
 # Projection(preset="agentarts") used across these tests.
-import agentarts_instrumentation.jiuwen  # noqa: F401, E402
+import agentarts_instrumentation.openjiuwen  # noqa: F401, E402
 import pytest
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.trace import SpanContext, SpanKind, TraceFlags

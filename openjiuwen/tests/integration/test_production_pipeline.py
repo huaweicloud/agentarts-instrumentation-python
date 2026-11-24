@@ -26,7 +26,7 @@ import pytest
 from agentarts_instrumentation.config import ExporterConfig, Projection
 from agentarts_instrumentation.exporter.buffer import BufferedOtlpExporter
 from agentarts_instrumentation.exporter.transform import TransformingSpanExporter
-from agentarts_instrumentation.jiuwen.preset import _input_aggregator
+from agentarts_instrumentation.openjiuwen.preset import _input_aggregator
 from agentarts_instrumentation.projection import project_span
 from opentelemetry.trace import SpanKind
 

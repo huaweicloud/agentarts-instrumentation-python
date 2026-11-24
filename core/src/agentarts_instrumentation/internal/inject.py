@@ -3,7 +3,7 @@
 """Generic in-package runtime-injection toolkit (.pth installer +
 deferred import-time patching).
 
-Framework packs (e.g. agentarts-instrumentation-jiuwen) use this to hook
+Framework packs (e.g. agentarts-instrumentation-openjiuwen) use this to hook
 their SDK exporter into host runtimes: ``install_pth`` writes a guarded
 .pth into the venv's site-packages that imports the framework pack's
 inject module in **every** interpreter process; the pack's module-level
@@ -60,7 +60,7 @@ def install_pth(
     reinstalling/upgrading the pack automatically repoints injection at
     the new version. ``package_marker`` is the site-packages-relative
     path that identifies the installed pack (e.g.
-    ``agentarts_instrumentation/jiuwen``) — used to locate the right
+    ``agentarts_instrumentation/openjiuwen``) — used to locate the right
     site directory.
 
     Idempotent: an existing .pth with identical content is left alone;

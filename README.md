@@ -10,10 +10,10 @@
 
 | 目录 | PyPI 包 | 说明 |
 |---|---|---|
-| [core/](core/README.md) | `agentarts-instrumentation-core` | 框架无关的 OTLP 上报内核：缓冲导出、投影管线与派生注册表、运行时注入工具。workspace 内部包，暂不单独发布（fat 模式下内嵌于 jiuwen 一起分发） |
-| [jiuwen/](jiuwen/README.md) | `agentarts-instrumentation-jiuwen` | OpenJiuwen 语义包：**自包含发行**（wheel 内嵌 core 全部模块），用户只需安装这一个包 |
+| [core/](core/README.md) | `agentarts-instrumentation-core` | 框架无关的 OTLP 上报内核：缓冲导出、投影管线与派生注册表、运行时注入工具。workspace 内部包，暂不单独发布（fat 模式下内嵌于 openjiuwen 一起分发） |
+| [jiuwen/](openjiuwen/README.md) | `agentarts-instrumentation-openjiuwen` | OpenJiuwen 语义包：**自包含发行**（wheel 内嵌 core 全部模块），用户只需安装这一个包 |
 
-> LangChain/LangGraph、Hermes 等框架适配包规划中，按 jiuwen 的同一模式接入。
+> LangChain/LangGraph、Hermes 等框架适配包规划中，按 openjiuwen 的同一模式接入。
 
 安装与使用请查看对应框架包目录下的 README；SDK 整体设计见 [docs/design.md](docs/design.md)。
 
@@ -22,9 +22,9 @@
 ```bash
 uv sync --all-packages --all-extras   # 安装 workspace 全部包与依赖
 uv run pytest                          # 运行测试（e2e/integration/live 组按环境自动跳过）
-uvx ruff check core jiuwen examples    # lint
+uvx ruff check core openjiuwen examples    # lint
 uv build core                          # 构建 core 发行包
-uv build jiuwen                        # 构建 jiuwen 发行包
+uv build openjiuwen                        # 构建 jiuwen 发行包
 ```
 
 ## API 参考

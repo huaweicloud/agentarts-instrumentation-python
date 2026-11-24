@@ -16,9 +16,9 @@ import http.server
 import threading
 
 # This test drives the full agentarts-preset pipeline; importing the
-# jiuwen pack registers the derivation (belt-and-braces next to the
-# jiuwen/tests conftest, so the file also works standalone).
-import agentarts_instrumentation.jiuwen  # noqa: F401
+# openjiuwen pack registers the derivation (belt-and-braces next to the
+# openjiuwen/tests conftest, so the file also works standalone).
+import agentarts_instrumentation.openjiuwen  # noqa: F401
 import pytest
 from agentarts_instrumentation import ExporterConfig, Projection, build_exporter
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (

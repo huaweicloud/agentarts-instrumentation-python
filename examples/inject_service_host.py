@@ -162,7 +162,7 @@ def main() -> bool:
         )
         return False
     try:
-        import agentarts_instrumentation.jiuwen  # noqa: F401 - registers the agentarts derivation
+        import agentarts_instrumentation.openjiuwen  # noqa: F401 - registers the agentarts derivation
         from agentarts_instrumentation import ExporterConfig, Projection, build_exporter
         from openjiuwen.extensions.observability import setup as oj_setup
         from opentelemetry.sdk.trace import TracerProvider

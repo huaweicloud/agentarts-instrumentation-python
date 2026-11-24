@@ -1,6 +1,6 @@
 # Copyright (c) Huawei Technologies Co., Ltd. 2026. All rights reserved.
 
-"""agentarts-instrumentation-jiuwen: OpenJiuwen semantic pack for
+"""agentarts-instrumentation-openjiuwen: OpenJiuwen semantic pack for
 Huawei Cloud AgentArts (agent-ops).
 
 Registers the ``agentarts`` projection derivation (openjiuwen attribute
@@ -29,7 +29,7 @@ from ._version import __version__
 from .preset import derive_agentarts
 
 # Register the framework derivation for Projection(preset="agentarts").
-# Importing agentarts_instrumentation.jiuwen (directly or via the .pth
+# Importing agentarts_instrumentation.openjiuwen (directly or via the .pth
 # injection) is what activates the preset.
 register_derivation("agentarts", derive_agentarts)
 

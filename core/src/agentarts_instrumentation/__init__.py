@@ -6,7 +6,7 @@ AgentArts (agent-ops).
 Framework-agnostic building blocks: the bounded-buffer OTLP exporter, the
 copy-on-export span projection pipeline, the exporter factory, and the
 runtime-injection toolkit. Framework packs (e.g.
-agentarts-instrumentation-jiuwen) register their semantic derivations here
+agentarts-instrumentation-openjiuwen) register their semantic derivations here
 and drive injection into host runtimes. See docs/design.md.
 """
 

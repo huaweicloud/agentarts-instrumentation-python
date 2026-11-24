@@ -907,7 +907,7 @@ def derive_agentarts(
     """The ``agentarts`` derivation: openjiuwen data contract → AgentArts
     semantics (design.md §4.3).
 
-    Registered as ``agentarts`` by agentarts_instrumentation.jiuwen at
+    Registered as ``agentarts`` by agentarts_instrumentation.openjiuwen at
     import time; the core projection pipeline applies it between
     attribute injection and user drop/rename/truncate. Mutates the
     working ``attrs`` in place; returns the clone overrides (display

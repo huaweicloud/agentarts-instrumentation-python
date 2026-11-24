@@ -5,7 +5,7 @@
 Follows the Huawei Cloud doc "OpenTelemetry Protocol Field Mapping"
 (version 2026-11-02,
 https://support.huaweicloud.com/ops-agentarts/agentarts_14_0127.html).
-Framework derivations (e.g. the jiuwen ``agentarts`` preset) map their
+Framework derivations (e.g. the openjiuwen ``agentarts`` preset) map their
 host data contract onto these keys; the core pipeline itself is key-
 agnostic.
 """
@@ -44,7 +44,7 @@ K_OUTPUT_MESSAGES = "gen_ai.output.messages"
 K_SYSTEM_INSTRUCTIONS = "gen_ai.system_instructions"
 
 # ---- Keys where host naming and the platform naming differ (renamed by
-# derivations; see the jiuwen preset's AGENTARTS_RENAME) ----
+# derivations; see the openjiuwen preset's AGENTARTS_RENAME) ----
 K_CACHE_WRITE = "gen_ai.usage.cache_write.input_tokens"
 K_REQUEST_STREAM = "gen_ai.request.stream"
 K_TTFT = "gen_ai.response.time_to_first_token"

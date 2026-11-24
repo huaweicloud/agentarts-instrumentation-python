@@ -31,8 +31,10 @@ from __future__ import annotations
 
 import os
 
+import agentarts_instrumentation.openjiuwen  # noqa: E402, F401 - registers the agentarts derivation
+
 # Requires the workspace packages to be installed (uv sync, or
-# pip install -e core -e jiuwen).
+# pip install -e core -e openjiuwen).
 from agentarts_instrumentation import ExporterConfig, Projection, build_exporter  # noqa: E402
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor

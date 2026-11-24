@@ -12,7 +12,7 @@ new version, no file copying needed).
 
 Deploy (inject right after pip install)::
 
-    pip install "agentarts-instrumentation-jiuwen[grpc]"  # 1. install (gRPC required)
+    pip install "agentarts-instrumentation-openjiuwen[grpc]"  # 1. install (gRPC required)
     agentarts-instrumentation-inject            # 2. write .pth (idempotent)
 
 From then on, **every** interpreter process of this venv executes
@@ -37,7 +37,7 @@ host's import order is identical to before the probe was installed —
 zero side effects.
 
 Uninstall: run ``agentarts-instrumentation-uninject`` (removes the .pth) — or delete
-``agentarts_instrumentation_jiuwen_inject.pth`` under site-packages
+``agentarts_instrumentation_openjiuwen_inject.pth`` under site-packages
 manually — BEFORE ``pip uninstall`` of the package. The .pth content is
 failure-guarded: once the package is gone it stays silent instead of
 printing a traceback at every interpreter start. Existing host
@@ -77,11 +77,11 @@ from agentarts_instrumentation.internal.inject import (
     remove_pth as _remove_pth_generic,
 )
 
-_PTH_NAME = "agentarts_instrumentation_jiuwen_inject.pth"
+_PTH_NAME = "agentarts_instrumentation_openjiuwen_inject.pth"
 #: The .pth imports this module so its module-level main() arms the
 #: injection in every interpreter process (the generic guarded one-liner
 #: lives in the core toolkit).
-_INJECT_MODULE = "agentarts_instrumentation.jiuwen.inject"
+_INJECT_MODULE = "agentarts_instrumentation.openjiuwen.inject"
 _PTH_LINE = build_pth_line(_INJECT_MODULE)
 _TAG = "[agentarts-instrumentation-inject]"
 
@@ -354,7 +354,7 @@ def install_pth() -> int:
     code = _install_pth_generic(
         module=_INJECT_MODULE,
         pth_name=_PTH_NAME,
-        package_marker="agentarts_instrumentation/jiuwen",
+        package_marker="agentarts_instrumentation/openjiuwen",
     )
     if code == 0:
         print(
@@ -372,7 +372,7 @@ def remove_pth() -> int:
     .pth from this interpreter's site-packages.
 
     Idempotent: a missing file is a success. Run this BEFORE
-    ``pip uninstall agentarts-instrumentation-jiuwen`` — the .pth line
+    ``pip uninstall agentarts-instrumentation-openjiuwen`` — the .pth line
     is failure-guarded (silent once the package is gone), but older
     unguarded builds would print a traceback at every interpreter start.
     Existing host processes keep their in-memory exporter until they
@@ -383,7 +383,7 @@ def remove_pth() -> int:
         print(
             f"{_TAG} injection disabled for new processes; existing host "
             f"processes keep exporting until they restart. Remove the SDK "
-            f"packages with: pip uninstall agentarts-instrumentation-jiuwen "
+            f"packages with: pip uninstall agentarts-instrumentation-openjiuwen "
             f"agentarts-instrumentation-core"
         )
     return code

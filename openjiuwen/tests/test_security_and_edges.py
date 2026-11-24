@@ -27,7 +27,7 @@ from typing import Any
 import pytest
 from agentarts_instrumentation.config import ExporterConfig, Projection
 from agentarts_instrumentation.exporter.buffer import BufferedOtlpExporter
-from agentarts_instrumentation.jiuwen.inject import (
+from agentarts_instrumentation.openjiuwen.inject import (
     ENV_APM_ENABLE,
     ENV_RESOURCE_ID,
     ENV_TOKEN,
@@ -36,7 +36,7 @@ from agentarts_instrumentation.jiuwen.inject import (
     _read_env_file,
     main,
 )
-from agentarts_instrumentation.jiuwen.preset import _TurnInputAggregator
+from agentarts_instrumentation.openjiuwen.preset import _TurnInputAggregator
 from agentarts_instrumentation.projection import project_span
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 

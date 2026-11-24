@@ -2,7 +2,7 @@ name: Preview Release
 # Any v* tag produces a prerelease with the built wheels attached
 # (preview builds for early adopters; final publishing goes to PyPI).
 #
-# agentarts-instrumentation-jiuwen is a self-contained (fat) wheel that
+# agentarts-instrumentation-openjiuwen is a self-contained (fat) wheel that
 # bundles the core namespace modules — it is the only artifact users
 # need to install. core is a workspace-internal package and is not
 # attached to releases in fat-wheel mode.
@@ -17,14 +17,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
-      - name: Build jiuwen fat wheel
+      - name: Build openjiuwen fat wheel
         run: |
-          uv build jiuwen --wheel
+          uv build openjiuwen --wheel
       - name: Create prerelease
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release create "$GITHUB_REF_NAME" --prerelease \
             --title "Preview $GITHUB_REF_NAME" \
-            --notes "Preview build from tag $GITHUB_REF_NAME. Install the single self-contained wheel: agentarts-instrumentation-jiuwen (bundles agentarts-instrumentation-core)." \
+            --notes "Preview build from tag $GITHUB_REF_NAME. Install the single self-contained wheel: agentarts-instrumentation-openjiuwen (bundles agentarts-instrumentation-core)." \
             dist/*.whl

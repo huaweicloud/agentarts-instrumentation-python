@@ -8,7 +8,7 @@ from __future__ import annotations
 import builtins
 import site
 
-import agentarts_instrumentation.jiuwen.inject as inj
+import agentarts_instrumentation.openjiuwen.inject as inj
 
 
 def test_pth_line_starts_with_import():
@@ -45,11 +45,11 @@ def test_pth_line_guards_missing_package(monkeypatch):
 def test_install_remove_roundtrip(tmp_path, monkeypatch, capsys):
     """install_pth writes the .pth next to the package (idempotently,
     upgrading older content); remove_pth deletes it (idempotently)."""
-    pkg_dir = tmp_path / "agentarts_instrumentation" / "jiuwen"
+    pkg_dir = tmp_path / "agentarts_instrumentation" / "openjiuwen"
     pkg_dir.mkdir(parents=True)
     monkeypatch.setattr(site, "getsitepackages", lambda: [str(tmp_path)])
 
-    pth = tmp_path / "agentarts_instrumentation_jiuwen_inject.pth"
+    pth = tmp_path / "agentarts_instrumentation_openjiuwen_inject.pth"
 
     # Fresh install writes the current content.
     assert inj.install_pth() == 0
@@ -62,7 +62,7 @@ def test_install_remove_roundtrip(tmp_path, monkeypatch, capsys):
     assert pth.read_text(encoding="utf-8") == inj._PTH_LINE
 
     # Older (unguarded) content gets upgraded in place.
-    pth.write_text("import agentarts_instrumentation.jiuwen.inject\n", encoding="utf-8")
+    pth.write_text("import agentarts_instrumentation.openjiuwen.inject\n", encoding="utf-8")
     assert inj.install_pth() == 0
     assert "upgraded" in capsys.readouterr().out
     assert pth.read_text(encoding="utf-8") == inj._PTH_LINE

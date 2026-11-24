@@ -1,4 +1,4 @@
-# agentarts-instrumentation-jiuwen
+# agentarts-instrumentation-openjiuwen
 
 OpenJiuwen 语义包：向华为云 AgentArts（agent-ops）上报 openjiuwen / jiuwenswarm 智能体的 Trace 数据。
 
@@ -8,10 +8,10 @@ OpenJiuwen 语义包：向华为云 AgentArts（agent-ops）上报 openjiuwen / 
 
 ## 安装
 
-`agentarts-instrumentation-jiuwen` 是**自包含发行包**：wheel 内已内嵌 `agentarts-instrumentation-core` 的全部模块（对其无 pip 依赖），安装这一个包即可，无需再装其他 SDK 包。
+`agentarts-instrumentation-openjiuwen` 是**自包含发行包**：wheel 内已内嵌 `agentarts-instrumentation-core` 的全部模块（对其无 pip 依赖），安装这一个包即可，无需再装其他 SDK 包。
 
 ```bash
-pip install "agentarts-instrumentation-jiuwen[grpc]"   # gRPC 为 AgentArts 接入网关必需
+pip install "agentarts-instrumentation-openjiuwen[grpc]"   # gRPC 为 AgentArts 接入网关必需
 ```
 
 > 预览 wheel 直装：见 [Releases](https://github.com/huaweicloud/agentarts-instrumentation-python/releases)（v0.1.0a2 起为单个自包含 wheel）。
@@ -21,7 +21,7 @@ pip install "agentarts-instrumentation-jiuwen[grpc]"   # gRPC 为 AgentArts 接�
 方式一（standalone）：把 exporter 交给宿主的初始化钩子。
 
 ```python
-import agentarts_instrumentation.jiuwen  # 注册 agentarts 语义派生
+import agentarts_instrumentation.openjiuwen  # 注册 agentarts 语义派生
 from agentarts_instrumentation import ExporterConfig, Projection, build_exporter
 
 exporter = build_exporter(
@@ -46,6 +46,8 @@ init_observability(config, span_exporter_override=exporter)
 agentarts-instrumentation-inject
 ```
 
+> 两种形态的完整步骤、凭证配置与无数据排障，见 [SDK 形态使用指南](../docs/guide-sdk.md) 与 [探针式安装器使用指南](../docs/guide-probe.md)。
+
 ## 访问凭证
 
 通过环境变量提供（或用 `AGENTARTS_ENV_FILE` 指向 .env 文件，进程环境优先）：
@@ -61,13 +63,15 @@ agentarts-instrumentation-inject
 ## 测试
 
 ```bash
-uv run pytest jiuwen/tests                     # 单元组（默认全跑）
-uv run pytest jiuwen/tests/integration         # 需本地 agent-core checkout（AGENT_CORE_DIR）
-uv run pytest jiuwen/tests/live                # 需真实平台凭证
+uv run pytest openjiuwen/tests                     # 单元组（默认全跑）
+uv run pytest openjiuwen/tests/integration         # 需本地 agent-core checkout（AGENT_CORE_DIR）
+uv run pytest openjiuwen/tests/live                # 需真实平台凭证
 ```
 
 ## 文档
 
+- [SDK 形态使用指南](../docs/guide-sdk.md)（显式集成）
+- [探针式安装器使用指南](../docs/guide-probe.md)（.pth 注入）
 - [设计文档](../docs/design.md)（§4.3 agentarts 派生、§4.5 缓冲、§6 接入）
 - [接入指南](../docs/接入指南.md)（逐步操作手册）
 - [Tutorial](../docs/tutorial.md)

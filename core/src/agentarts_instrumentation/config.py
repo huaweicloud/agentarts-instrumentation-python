@@ -20,7 +20,7 @@ class Projection(BaseModel):
             time. ``none`` disables derivation and only applies the explicit
             rules below. The ``agentarts`` preset (openjiuwen data contract
             -> AgentArts gen_ai.* semantics) is registered by
-            agentarts-instrumentation-jiuwen; other framework packs register
+            agentarts-instrumentation-openjiuwen; other framework packs register
             their own names.
         attributes: Common attributes injected into every exported span;
             never overwrites existing keys.
