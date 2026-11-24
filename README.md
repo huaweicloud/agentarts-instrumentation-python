@@ -15,7 +15,7 @@
 
 > LangChain/LangGraph、Hermes 等框架适配包规划中，按 openjiuwen 的同一模式接入。
 
-安装与使用请查看对应框架包目录下的 README；SDK 整体设计见 [docs/design.md](docs/design.md)。
+安装与使用请查看对应框架包目录下的 README；SDK 整体设计见 [openjiuwen/docs/design.md](openjiuwen/docs/design.md)。
 
 ## 本地开发
 

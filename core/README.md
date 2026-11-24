@@ -46,4 +46,4 @@ provider.add_span_processor(SimpleSpanProcessor(exporter))
 
 ## 文档
 
-- [设计文档](../docs/design.md)
+- [设计文档](../openjiuwen/docs/design.md)
