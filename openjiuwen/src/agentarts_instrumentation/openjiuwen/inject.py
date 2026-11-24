@@ -3,9 +3,7 @@
 """AgentArts runtime injection into openjiuwen hosts (in-package;
 installed via the ``agentarts-instrumentation-inject`` command).
 
-Logic mirrors ``examples/inject_service_host.py`` (the copy-based
-template for environments without pip); only the deployment shape
-differs: this module ships with the package, and the ``.pth`` written
+This module ships with the package, and the ``.pth`` written
 by the installer references the in-package path — **upgrades are
 zero-maintenance** (reinstalling the package repoints injection to the
 new version, no file copying needed).

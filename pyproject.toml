@@ -18,4 +18,4 @@ select = ["E", "F", "W", "I", "B", "UP"]
 "**/tests/**" = ["E501", "B017"]
 "**/tests/**/conftest.py" = ["E402"]
 # Example scripts import after runtime setup lines.
-"examples/*" = ["E402"]
+"openjiuwen/examples/*" = ["E402"]

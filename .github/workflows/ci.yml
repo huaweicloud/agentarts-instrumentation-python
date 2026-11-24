@@ -16,7 +16,7 @@ jobs:
       - uses: astral-sh/setup-uv@v5
       - name: Run linter
         run: |
-          uvx ruff check core openjiuwen examples
+          uvx ruff check core openjiuwen
   test:
     needs: lint
     runs-on: ubuntu-latest

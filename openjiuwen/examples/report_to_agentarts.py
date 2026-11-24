@@ -16,7 +16,7 @@ Usage:
          set agent_domain_id=...          # optional, injects domain.id
          set agentarts_project_id=...     # optional, injects gen_ai.project.id
          set AGENTARTS_USER_ID=...        # optional
-         python examples/report_to_agentarts.py
+         python openjiuwen/examples/report_to_agentarts.py
     3. Check the echo under the agent's trace analysis view in the
        AgentArts console.
 
