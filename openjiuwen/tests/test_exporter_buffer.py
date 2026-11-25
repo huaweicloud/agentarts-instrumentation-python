@@ -233,3 +233,50 @@ def test_projection_integrated_with_buffer(make_span):
     assert "secret.key" not in attrs
     assert span.attributes["secret.key"] == "v"  # original span untouched
     exporter.shutdown()
+
+
+def test_batch_byte_cap_splits_batches(make_span):
+    """A batch is closed before popping a span that would push it over
+    batch_max_bytes; that span starts the next batch (never dropped)."""
+    payload = "x" * 5000
+    per_span = _estimate_span_bytes(make_span("s0", attributes={"payload": payload}))
+    inner = FakeExporter()
+    exporter = BufferedOtlpExporter(
+        inner, _config(batch_size=64, batch_max_bytes=2 * per_span)
+    )
+    exporter.export(
+        [make_span(f"s{i}", attributes={"payload": payload}) for i in range(5)]
+    )
+    assert exporter.force_flush(timeout_millis=5000) is True
+    assert [len(b) for b in inner.batches] == [2, 2, 1]  # 2*per_span cap -> 2/2/1
+    assert exporter._dropped == 0
+    exporter.shutdown()
+
+
+def test_batch_oversized_single_span_sent_alone(make_span):
+    """A single span larger than batch_max_bytes ships as its own batch:
+    the cap is a splitting granularity, not a request limit."""
+    big = make_span("big", attributes={"payload": "x" * 400_000})
+    assert _estimate_span_bytes(big) > 300_000
+    inner = FakeExporter()
+    exporter = BufferedOtlpExporter(
+        inner, _config(batch_size=64, batch_max_bytes=300_000)
+    )
+    exporter.export([make_span("a"), big, make_span("b")])
+    assert exporter.force_flush(timeout_millis=5000) is True
+    assert ["big"] == [s.name for s in inner.batches[1]]  # alone, in order
+    assert {s.name for s in inner.exported} == {"a", "big", "b"}
+    assert exporter._dropped == 0
+    exporter.shutdown()
+
+
+def test_batch_count_cap_still_applies(make_span):
+    """With the byte cap far away, batch_size alone still splits batches."""
+    inner = FakeExporter()
+    exporter = BufferedOtlpExporter(
+        inner, _config(batch_size=3, batch_max_bytes=10_000_000)
+    )
+    exporter.export([make_span(f"s{i}") for i in range(5)])
+    assert exporter.force_flush(timeout_millis=5000) is True
+    assert [len(b) for b in inner.batches] == [3, 2]
+    exporter.shutdown()

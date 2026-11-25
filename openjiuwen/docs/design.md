@@ -145,9 +145,10 @@ class ExporterConfig(BaseModel):
     queue_size: int = Field(default=4096, ge=1)          # bounded queue capacity (count); evicts oldest when full
     queue_max_bytes: int = Field(default=134217728, ge=1024)  # bounded queue capacity (estimated bytes); same eviction
     batch_size: int = Field(default=32, ge=1)
+    batch_max_bytes: int = Field(default=10_000_000, ge=1) # estimated byte cap per batch; a would-overflow span starts the next batch, an oversized single span ships alone (never dropped)
     flush_interval_ms: int = Field(default=500, ge=1)
     otlp_timeout_ms: int = Field(default=30000, ge=100)  # per-RPC timeout of the inner official exporter (incl. internal retries)
-    export_attempts: int = Field(default=10, ge=1)       # total attempts per failed batch (exponential backoff 1/2/4/8/16/30s; drop only when exhausted)
+    export_attempts: int = Field(default=5, ge=1)          # total attempts per failed batch (exponential backoff 1/2/4/8s; drop only when exhausted)
     export_timeout_ms: int = Field(default=5000, ge=100) # shutdown/force_flush drain timeout, aligned with the main stack
 ```
 
@@ -402,7 +403,7 @@ Structure:
 SimpleSpanProcessor
   └─ BufferedOtlpExporter            # SDK self-contained
        ├─ bounded queue (queue_size)
-       ├─ background flush thread    # takes batch_size items per pass / every flush_interval_ms
+       ├─ background flush thread    # takes batch_size items / batch_max_bytes est. bytes / flush_interval_ms, whichever first
        ├─ inner: official OTLPSpanExporter # retry / compression / protocol guaranteed upstream
        └─ Projection (optional; applied to the clone at enqueue or dequeue)
 ```

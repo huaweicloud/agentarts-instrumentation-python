@@ -73,6 +73,15 @@ class ExporterConfig(BaseModel):
             64-span batches carrying large LLM input/output payloads
             hit DEADLINE_EXCEEDED on a slow gateway far more often than
             32-span ones.
+        batch_max_bytes: Estimated byte cap per batch (enqueue-time
+            attribute-length estimation, error <1% for the LLM span
+            shape of few huge strings). A batch is closed early once
+            adding the next span would exceed it — count, bytes and
+            flush_interval, whichever fires first. A single span larger
+            than the cap is sent alone (never dropped): the cap is a
+            splitting granularity, not a request limit. Default 10MB —
+            the gateway's request-size headroom (requirement: batches
+            stay ≤10MB).
         flush_interval_ms: Background flush interval.
         otlp_timeout_ms: Per-RPC timeout of the inner official exporter
             (total deadline including its internal retries). Measured
@@ -82,12 +91,12 @@ class ExporterConfig(BaseModel):
             subagent-burst slow-gateway windows observed (2026-11-24,
             where 15s lost whole 64-span batches).
         export_attempts: Total attempts per failed batch (including
-            the first); retries with exponential backoff (1/2/4/8/16/30s
-            capped) and only counts as dropped when exhausted. Default
-            10 × 30s RPC + ~151s backoff ≈ 7.5 minutes of outage
-            survival (measured gateway outages up to ~90s and
-            slow-gateway burst streaks of several minutes, 2026-11-24;
-            6 × 15s + 10s-cap ≈ 2min still dropped 2 × 64 spans then).
+            the first); retries with exponential backoff (1/2/4/8/16s
+            then capped at 30s) and only counts as dropped when
+            exhausted. Default 5 × 30s RPC + ~15s backoff ≈ 3 minutes
+            of outage survival (measured gateway outages up to ~90s;
+            the 10MB byte-capped batches keep single requests well
+            within the 30s RPC timeout on slow gateways).
         export_timeout_ms: Drain timeout for shutdown/force_flush,
             aligned with the openjiuwen main stack semantics.
     """
@@ -99,9 +108,10 @@ class ExporterConfig(BaseModel):
     queue_size: int = Field(default=4096, ge=1)
     queue_max_bytes: int = Field(default=134217728, ge=1024)
     batch_size: int = Field(default=32, ge=1)
+    batch_max_bytes: int = Field(default=10_000_000, ge=1)
     flush_interval_ms: int = Field(default=500, ge=1)
     otlp_timeout_ms: int = Field(default=30000, ge=100)
-    export_attempts: int = Field(default=10, ge=1)
+    export_attempts: int = Field(default=5, ge=1)
     export_timeout_ms: int = Field(default=5000, ge=100)
 
     @field_validator("headers")

@@ -60,13 +60,13 @@ def _audit_span(spans: Any) -> None:
         pass
 
 
-def _audit_batch(result: Any, count: int, attempt: int = 1) -> None:
+def _audit_batch(result: Any, count: int, attempt: int = 1, batch_bytes: int = 0) -> None:
     """Record one batch send result (diagnostics only)."""
     if not _AUDIT_PATH:
         return
     try:
         with _audit_lock, open(_AUDIT_PATH, "a", encoding="utf-8") as fh:
-            fh.write(f"#BATCH\t{count}\t{result}\tattempt={attempt}\n")
+            fh.write(f"#BATCH\t{count}\t{result}\tattempt={attempt}\tbytes={batch_bytes}\n")
     except Exception:  # noqa: BLE001
         pass
 
@@ -103,6 +103,11 @@ class BufferedOtlpExporter(SpanExporter):
 
     - ``export(spans)``: enqueue and return SUCCESS immediately; never
       blocks the caller;
+    - Batch assembly (count + byte cap): a batch is closed once it
+      reaches ``batch_size`` spans **or** estimated ``batch_max_bytes``
+      (a span that would overflow it starts the next batch); a single
+      span larger than the cap is sent as its own batch — never
+      dropped for size alone;
     - Backpressure (dual limit): evict oldest with a warning once the
       queue reaches ``queue_size`` **or** estimated bytes reach
       ``queue_max_bytes`` — never raises into business flow. The count
@@ -123,6 +128,7 @@ class BufferedOtlpExporter(SpanExporter):
         self._maxsize = config.queue_size
         self._maxbytes = config.queue_max_bytes
         self._batch_size = config.batch_size
+        self._batch_max_bytes = config.batch_max_bytes
         self._flush_interval = config.flush_interval_ms / 1000.0
         self._shutdown_timeout = config.export_timeout_ms / 1000.0
         self._max_attempts = max(1, int(config.export_attempts))
@@ -132,6 +138,7 @@ class BufferedOtlpExporter(SpanExporter):
         self._queued_bytes = 0
         self._dropped = 0
         self._reported_dropped = 0
+        self._warned_oversize = False
         self._closed = False
         self._shutdown_done = False
         self._sending = False
@@ -233,15 +240,37 @@ class BufferedOtlpExporter(SpanExporter):
             )
             self._reported_dropped = self._dropped
 
-    def _take_batch(self) -> list[ReadableSpan]:
-        batch: list[ReadableSpan] = []
+    def _take_batch(self) -> list[tuple[ReadableSpan, int]]:
+        """Pop one batch: count cap, byte cap, whichever fires first.
+
+        Entries are ``(span, estimated_bytes)`` pairs. Byte cap: close
+        the batch before popping a span that would push it over
+        ``batch_max_bytes`` — that span starts the next batch. A single
+        span larger than the cap is always taken alone (batch of one,
+        never dropped): the cap is a splitting granularity, not a
+        request limit — spans up to the 128MB queue budget are legal.
+        """
+        batch: list[tuple[ReadableSpan, int]] = []
+        batch_bytes = 0
         with self._cond:
             while not self._queue and not self._closed:
                 self._cond.wait(self._flush_interval)
             while self._queue and len(batch) < self._batch_size:
-                span, size = self._queue.popleft()
+                span, size = self._queue[0]
+                if batch and batch_bytes + size > self._batch_max_bytes:
+                    break
+                if size > self._batch_max_bytes and not self._warned_oversize:
+                    self._warned_oversize = True
+                    logger.warning(
+                        "single span estimated %sB exceeds batch byte cap %sB; "
+                        "sending it as its own batch",
+                        size,
+                        self._batch_max_bytes,
+                    )
+                self._queue.popleft()
                 self._queued_bytes -= size
-                batch.append(span)
+                batch.append((span, size))
+                batch_bytes += size
         return batch
 
     def _run(self) -> None:
@@ -251,7 +280,8 @@ class BufferedOtlpExporter(SpanExporter):
                 with self._cond:
                     self._sending = True
                 try:
-                    self._send_with_retry(batch)
+                    spans = [span for span, _ in batch]
+                    self._send_with_retry(spans, sum(size for _, size in batch))
                 finally:
                     with self._cond:
                         self._sending = False
@@ -261,7 +291,7 @@ class BufferedOtlpExporter(SpanExporter):
                 if self._closed and not self._queue:
                     return
 
-    def _send_with_retry(self, batch: list[ReadableSpan]) -> None:
+    def _send_with_retry(self, batch: list[ReadableSpan], batch_bytes: int = 0) -> None:
         """Send one batch; retry with exponential backoff, count as
         dropped only when attempts are exhausted.
 
@@ -282,7 +312,7 @@ class BufferedOtlpExporter(SpanExporter):
                     "batch export exception (%s spans, attempt %s)", len(batch), attempts
                 )
                 result = SpanExportResult.FAILURE
-            _audit_batch(result, len(batch), attempts)
+            _audit_batch(result, len(batch), attempts, batch_bytes)
             if result is None or result == SpanExportResult.SUCCESS:
                 return
             if attempts >= self._max_attempts:
@@ -304,12 +334,13 @@ class BufferedOtlpExporter(SpanExporter):
             )
             if not self._closed:
                 # Exponential backoff: 1s, 2s, 4s, 8s, 16s, 30s... (capped
-                # at 30s). Measured slow-gateway windows: ~90s outage
-                # (2026-11-19, one trace lost 30 spans in two 3-failure
-                # streaks) and multi-minute subagent-burst DEADLINE_EXCEEDED
-                # streaks (2026-11-24, where 6 attempts x 15s RPC + 10s-cap
-                # backoff ~2min still dropped 2 x 64-span batches); 10
-                # attempts x 30s RPC + ~151s backoff ~ 7.5 minutes.
+                # at 30s; the default 5 attempts only ever sleep 1/2/4/8s).
+                # Measured slow-link gateway outages lasted ~90s
+                # (2026-11-19: one trace lost 30 spans in two 3-failure
+                # streaks); default policy: 5 attempts x 30s RPC + ~15s
+                # backoff ~ 3 minutes of outage survival, and the 10MB
+                # batch byte cap keeps single requests transferable
+                # within the RPC timeout even on slow gateways.
                 time.sleep(min(2 ** (attempts - 1), 30))
 
 
