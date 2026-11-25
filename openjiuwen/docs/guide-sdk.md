@@ -46,7 +46,7 @@ set agent_resource_id=...
 python openjiuwen/examples/report_to_agentarts.py
 ```
 
-脚本核心是下面的 exporter 组装——SDK 标准组装方式，用法二、用法三复用同一 `exporter` 对象：
+脚本核心是下面的 exporter 组装——SDK 标准组装方式，用法二复用同一 `exporter` 对象：
 
 ```python
 import os
@@ -76,11 +76,13 @@ exporter = build_exporter(
 )
 ```
 
-跑完到控制台该 Agent 的**追踪分析**视图确认 echo 出现。这一步验证了 endpoint/token/agent_id 三要素匹配，与后续宿主集成的问题域解耦；用法二、用法三在此基础上直接挂载同一 `exporter`。
+跑完到控制台该 Agent 的**追踪分析**视图确认 echo 出现。这一步验证了 endpoint/token/agent_id 三要素匹配，与后续宿主集成的问题域解耦；用法二在此基础上直接挂载同一 `exporter`。
 
 ## 4. 用法二：挂到 openjiuwen 宿主（核心场景）
 
-承接用法一组装好的 `exporter`（组装代码见上节，不再重复）：openjiuwen 的 `init_observability` 提供 `span_exporter_override` 官方钩子，传入即可：
+exporter 是进程内对象：第 3 节组装代码必须与挂载点写在**同一处**，不能跨文件/跨进程"复用"。按宿主形态二选一。
+
+### 4.1 自建宿主：你自己调 `init_observability`（agent-core 独立使用即此形态）
 
 ```python
 from openjiuwen.extensions.observability import init_observability
@@ -91,26 +93,43 @@ init_observability(
 )
 ```
 
-> 前置：exporter 只负责导出，span 得由宿主自己产生——宿主观测开关没打开就没有数据可导。接 jiuwenswarm 时注意其 `config.yaml`：`team_observability` 默认已启用，但单 agent 路径的 `agent_observability.enabled` 默认 `false`，需显式改为 `true`。
+team 场景用 `openjiuwen.agent_teams.observability.init_observability`，签名相同。
+
+### 4.2 jiuwenswarm 宿主：按宿主版本二选一
+
+**宿主 openjiuwen ≥0.1.20：免改源码**。启动钩子里再调一次 `init_observability`，provider 已存在时 runtime 会把 SDK processor 追加进去（file 主导出 + SDK 双路共存）：
+
+```python
+from openjiuwen.extensions.observability import get_config
+from openjiuwen.extensions.observability.config import ObservabilityConfig
+
+cfg = get_config() or ObservabilityConfig(enabled=True, service_name="jiuwenswarm")
+init_observability(cfg, span_exporter_override=exporter)
+```
+
+**0.1.16（dev-stable）：追加语义为静默 no-op，需改一处源码**。落点 `jiuwenswarm/telemetry/runtime.py` 的 `_start_agent_components`——组装代码放同函数，processor 追加进元组：
+
+```python
+from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+
+extra_processors = (
+    (trajectory_processor,) if trajectory_processor is not None else ()
+) + ((SimpleSpanProcessor(exporter),) if exporter else ())
+```
+
+两种方式挂上的都是全局 provider，team 路径的 span 同样被导出。不想改宿主源码 → 探针形态（[guide-probe.md](guide-probe.md)）。
+
+### 4.3 最佳实践清单
+
+- **先跑用法一**：三要素连通性验证先于宿主集成，问题域解耦
+- **凭证缺失要可跳过**：`os.environ.get(...)` 取值 + None 判断，本地无 env 时跳过组装而不是崩溃
+- **exporter 只导出不产生**：span 由宿主产生——jiuwenswarm 需在 `config.yaml` 显式设 `agent_observability.enabled: true`（默认 false，不开无数据）
+- **零阻塞**：`SimpleSpanProcessor` + 本 SDK（内部缓冲队列）在 span 结束时只做入队，业务线程不等待网络
+- **退出自动排空**：进程关闭链上 provider.shutdown 会传播到 exporter.shutdown，缓冲队列排空后才退出
 
 从此 openjiuwen 产生的所有 span（agent / llm / tool / iteration）在导出时流经：**投影管线**（openjiuwen 数据契约 → `gen_ai.*` 平台语义）→ **缓冲队列**（计数+字节双限、后台线程批量、退避重试）→ OTLP gRPC → AgentArts。
 
-## 5. 用法三：挂到任意 TracerProvider（通用 SDK）
-
-`exporter` 仍取用法一组装的那份（含 `import agentarts_instrumentation.openjiuwen` 派生注册），只是不接 openjiuwen 宿主——它本身就是一个标准 `SpanExporter`，可挂到任意 `TracerProvider`：
-
-```python
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import SimpleSpanProcessor
-
-provider = TracerProvider()
-provider.add_span_processor(SimpleSpanProcessor(exporter))
-tracer = provider.get_tracer("my-app")
-```
-
-适合把 SDK 用在其他自研框架的 PoC 上（注意：`agentarts` 派生规则按 openjiuwen 属性契约编写，跨框架时投影可能不全）。
-
-## 6. 配置速查
+## 5. 配置速查
 
 `ExporterConfig` 常用项：
 
@@ -129,7 +148,7 @@ tracer = provider.get_tracer("my-app")
 
 `Projection` 常用项：`preset="agentarts"`（平台语义派生）、`service_name`（平台服务命名）、`attributes`（公共属性注入）、`drop`（正则删属性）、`rename`、`truncate`（超长截断）。
 
-## 7. 验证与排障
+## 6. 验证与排障
 
 | 现象 | 排查 |
 |---|---|
@@ -138,6 +157,6 @@ tracer = provider.get_tracer("my-app")
 | 上报报错 404 | 用了 HTTP 协议——网关仅 gRPC |
 | AgentSpan 缺 output | 宿主 openjiuwen 0.1.16 的盖章时序缺陷，升级 ≥0.1.20（见仓库 docs） |
 
-## 8. 从 SDK 形态切到探针形态
+## 7. 从 SDK 形态切到探针形态
 
 开发期用 SDK 显式集成验证通了，生产部署不想改代码时：删掉显式集成代码，按 [guide-probe.md](guide-probe.md) 执行 `agentarts-instrumentation-inject` 即可——两种形态的 exporter 组装与投影配置完全一致。
