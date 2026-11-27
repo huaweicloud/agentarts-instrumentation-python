@@ -14,3 +14,4 @@ htmlcov/
 logs/
 .idea/
 .vscode/
+openjiuwen/docker/deploy-from-obs.md
