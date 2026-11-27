@@ -2,7 +2,7 @@
 
 OpenJiuwen 语义包：向华为云 AgentArts（agent-ops）上报 openjiuwen / jiuwenswarm 智能体的 Trace 数据。
 
-- 注册 `agentarts` 投影派生：openjiuwen 数据契约（`openjiuwen.*` 属性、span 命名形态）→ AgentArts `gen_ai.*` 平台语义（span.kind 派生、token/输入跨 span 聚合、AGENT 根状态升级、技能识别、显示名压缩等，详见 [docs/design.md](docs/design.md) §4.3）
+- 注册 `agentarts` 投影派生：openjiuwen 数据契约（`openjiuwen.*` 属性、span 命名形态）→ AgentArts `gen_ai.*` 平台语义（span.kind 派生、token/输入跨 span 聚合、AGENT 根状态升级、技能识别、显示名压缩等，详见 [docs/agentarts-semantics.md](docs/agentarts-semantics.md)）
 - 提供 openjiuwen 宿主注入：包装 `init_observability(..., span_exporter_override=...)`，宿主原生导出已指向 AgentArts 网关时自动让位（防重复上报）
 - 对 openjiuwen **零 import 依赖**：只读取其属性数据契约，可与任意宿主版本共存
 
@@ -71,7 +71,8 @@ uv run pytest openjiuwen/tests/live                # 需真实平台凭证
 ## 文档
 
 - [SDK 形态使用指南](docs/guide-sdk.md)（显式集成）
-- [探针式安装器使用指南](docs/guide-probe.md)（.pth 注入）
-- [设计文档](docs/design.md)（§4.3 agentarts 派生、§4.5 缓冲、§6 接入）
+- [探针式安装器使用指南](docs/guide-probe.md)（.pth 注入；含机制与宿主兼容性实测）
+- [设计文档](docs/design.md)（架构与组件；§4.5 缓冲）
+- [AgentArts 语义映射规范](docs/agentarts-semantics.md)（§4.3 agentarts 派生与裁剪规则）
 - [接入指南](docs/接入指南.md)（逐步操作手册）
 - [Tutorial](docs/tutorial.md)
